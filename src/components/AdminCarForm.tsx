@@ -27,15 +27,15 @@ import {
 
 // Validation schema
 const carSchema = z.object({
-  make: z.string().min(1, "Make is required"),
-  model: z.string().min(1, "Model is required"),
+  make: z.string().min(1, "Marque requise"),
+  model: z.string().min(1, "Modèle requis"),
   year: z.coerce.number().min(1900).max(new Date().getFullYear() + 1),
-  price: z.coerce.number().min(1, "Price must be greater than 0"),
-  mileage: z.coerce.number().min(0, "Mileage cannot be negative"),
-  color: z.string().min(1, "Color is required"),
+  price: z.coerce.number().min(1, "Le prix doit être supérieur à 0"),
+  mileage: z.coerce.number().min(0, "Le kilométrage ne peut pas être négatif"),
+  color: z.string().min(1, "Couleur requise"),
   transmission: z.enum(["automatic", "manual"]),
   fuelType: z.enum(["petrol", "diesel", "electric", "hybrid"]),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  description: z.string().min(10, "La description doit contenir au moins 10 caractères"),
   features: z.string().transform((val) => val.split("\n").filter(Boolean)),
   images: z.string().transform((val) => val.split("\n").filter(Boolean)),
   inStock: z.boolean().default(true),
@@ -59,9 +59,18 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
     resolver: zodResolver(carSchema),
     defaultValues: car
       ? {
-          ...car,
+          make: car.make,
+          model: car.model,
+          year: car.year,
+          price: car.price,
+          mileage: car.mileage,
+          color: car.color,
+          transmission: car.transmission,
+          fuelType: car.fuelType,
+          description: car.description,
           features: car.features.join("\n"),
           images: car.images.join("\n"),
+          inStock: car.inStock,
         }
       : {
           make: "",
@@ -92,9 +101,9 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
             name="make"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Make</FormLabel>
+                <FormLabel>Marque</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. BMW" {...field} />
+                  <Input placeholder="ex. BMW" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -106,9 +115,9 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
             name="model"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Model</FormLabel>
+                <FormLabel>Modèle</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. X5" {...field} />
+                  <Input placeholder="ex. X5" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -122,7 +131,7 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
             name="year"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Year</FormLabel>
+                <FormLabel>Année</FormLabel>
                 <FormControl>
                   <Input type="number" {...field} />
                 </FormControl>
@@ -136,7 +145,7 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Price (€)</FormLabel>
+                <FormLabel>Prix (€)</FormLabel>
                 <FormControl>
                   <Input type="number" {...field} />
                 </FormControl>
@@ -150,7 +159,7 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
             name="mileage"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Mileage (km)</FormLabel>
+                <FormLabel>Kilométrage (km)</FormLabel>
                 <FormControl>
                   <Input type="number" {...field} />
                 </FormControl>
@@ -166,9 +175,9 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
             name="color"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Color</FormLabel>
+                <FormLabel>Couleur</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Black" {...field} />
+                  <Input placeholder="ex. Noir" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -187,12 +196,12 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select transmission" />
+                      <SelectValue placeholder="Sélectionner transmission" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="automatic">Automatic</SelectItem>
-                    <SelectItem value="manual">Manual</SelectItem>
+                    <SelectItem value="automatic">Automatique</SelectItem>
+                    <SelectItem value="manual">Manuelle</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -205,21 +214,21 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
             name="fuelType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fuel Type</FormLabel>
+                <FormLabel>Type de carburant</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select fuel type" />
+                      <SelectValue placeholder="Sélectionner type de carburant" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="petrol">Petrol</SelectItem>
+                    <SelectItem value="petrol">Essence</SelectItem>
                     <SelectItem value="diesel">Diesel</SelectItem>
-                    <SelectItem value="electric">Electric</SelectItem>
-                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                    <SelectItem value="electric">Électrique</SelectItem>
+                    <SelectItem value="hybrid">Hybride</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -236,7 +245,7 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
               <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Detailed description of the vehicle"
+                  placeholder="Description détaillée du véhicule"
                   className="min-h-[120px]"
                   {...field}
                 />
@@ -252,16 +261,16 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
             name="features"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Features</FormLabel>
+                <FormLabel>Caractéristiques</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Enter features (one per line)"
+                    placeholder="Entrez les caractéristiques (une par ligne)"
                     className="min-h-[120px]"
                     {...field}
                   />
                 </FormControl>
                 <FormDescription>
-                  Enter each feature on a new line
+                  Entrez chaque caractéristique sur une nouvelle ligne
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -276,13 +285,13 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
                 <FormLabel>Images</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Enter image URLs (one per line)"
+                    placeholder="Entrez les URLs d'images (une par ligne)"
                     className="min-h-[120px]"
                     {...field}
                   />
                 </FormControl>
                 <FormDescription>
-                  Enter each image URL on a new line
+                  Entrez chaque URL d'image sur une nouvelle ligne
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -296,9 +305,9 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FormLabel>Available</FormLabel>
+                <FormLabel>Disponible</FormLabel>
                 <FormDescription>
-                  Is this vehicle currently in stock?
+                  Ce véhicule est-il actuellement en stock?
                 </FormDescription>
               </div>
               <FormControl>
@@ -312,7 +321,7 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
         />
 
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : car ? "Update Vehicle" : "Add Vehicle"}
+          {isSubmitting ? "Enregistrement..." : car ? "Mettre à jour" : "Ajouter le véhicule"}
         </Button>
       </form>
     </Form>

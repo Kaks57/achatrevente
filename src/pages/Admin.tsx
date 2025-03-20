@@ -54,15 +54,15 @@ const Admin = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
     
-    // Check if user is admin
+    // Vérifier si l'utilisateur est admin
     const isAdmin = requireAdmin();
     setIsAuthorized(isAdmin);
 
     if (isAdmin) {
-      // Fetch all cars
+      // Récupérer toutes les voitures
       fetchCars();
     } else {
-      // Redirect to login if not admin
+      // Rediriger vers login si pas admin
       navigate("/login");
     }
   }, [navigate]);
@@ -73,7 +73,7 @@ const Admin = () => {
     setFilteredCars(fetchedCars);
   };
 
-  // Handle search
+  // Gestion de la recherche
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredCars(cars);
@@ -97,7 +97,7 @@ const Admin = () => {
       fetchCars();
       setIsAddDialogOpen(false);
     } catch (error) {
-      console.error("Error adding car:", error);
+      console.error("Erreur lors de l'ajout du véhicule:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -113,7 +113,7 @@ const Admin = () => {
       setIsEditDialogOpen(false);
       setSelectedCar(null);
     } catch (error) {
-      console.error("Error updating car:", error);
+      console.error("Erreur lors de la mise à jour du véhicule:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -124,7 +124,7 @@ const Admin = () => {
       deleteCar(id);
       fetchCars();
     } catch (error) {
-      console.error("Error deleting car:", error);
+      console.error("Erreur lors de la suppression du véhicule:", error);
     }
   };
 
@@ -133,7 +133,7 @@ const Admin = () => {
     navigate("/login");
   };
 
-  // Format price with Euro symbol
+  // Formater le prix avec le symbole Euro
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
@@ -152,12 +152,12 @@ const Admin = () => {
       
       <main className="flex-grow pt-16">
         <div className="container mx-auto px-4 py-8 animate-fade-in">
-          {/* Admin header */}
+          {/* En-tête Admin */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+              <h1 className="text-3xl font-bold mb-2">Tableau de Bord Admin</h1>
               <p className="text-muted-foreground">
-                Manage your vehicle inventory
+                Gérez votre inventaire de véhicules
               </p>
             </div>
             <Button 
@@ -167,24 +167,24 @@ const Admin = () => {
               className="mt-4 md:mt-0"
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              Déconnexion
             </Button>
           </div>
 
           <Tabs defaultValue="vehicles" className="mb-8">
             <TabsList>
-              <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
-              <TabsTrigger value="add">Add New Vehicle</TabsTrigger>
+              <TabsTrigger value="vehicles">Véhicules</TabsTrigger>
+              <TabsTrigger value="add">Ajouter un Véhicule</TabsTrigger>
             </TabsList>
             
             <TabsContent value="vehicles" className="space-y-6">
-              {/* Search and filters */}
+              {/* Recherche et filtres */}
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="relative w-full md:w-80">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     type="text"
-                    placeholder="Search vehicles..."
+                    placeholder="Rechercher des véhicules..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -193,19 +193,19 @@ const Admin = () => {
                 
                 <Button onClick={() => setIsAddDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add New Vehicle
+                  Ajouter un Véhicule
                 </Button>
               </div>
 
-              {/* Vehicles table */}
+              {/* Tableau des véhicules */}
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Vehicle</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Year</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Véhicule</TableHead>
+                      <TableHead>Prix</TableHead>
+                      <TableHead>Année</TableHead>
+                      <TableHead>Statut</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -227,7 +227,7 @@ const Admin = () => {
                                   : "bg-red-500/90 hover:bg-red-500/80"
                               }
                             >
-                              {car.inStock ? "In Stock" : "Sold Out"}
+                              {car.inStock ? "En Stock" : "Vendu"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
@@ -241,30 +241,30 @@ const Admin = () => {
                                 }}
                               >
                                 <Edit className="h-4 w-4" />
-                                <span className="sr-only">Edit</span>
+                                <span className="sr-only">Modifier</span>
                               </Button>
                               
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="ghost" size="icon">
                                     <Trash2 className="h-4 w-4 text-destructive" />
-                                    <span className="sr-only">Delete</span>
+                                    <span className="sr-only">Supprimer</span>
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Vehicle</AlertDialogTitle>
+                                    <AlertDialogTitle>Supprimer le Véhicule</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Are you sure you want to delete this vehicle? This action cannot be undone.
+                                      Êtes-vous sûr de vouloir supprimer ce véhicule ? Cette action ne peut pas être annulée.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>Annuler</AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => handleDeleteCar(car.id)}
                                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                     >
-                                      Delete
+                                      Supprimer
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -276,7 +276,7 @@ const Admin = () => {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center py-8">
-                          No vehicles found
+                          Aucun véhicule trouvé
                         </TableCell>
                       </TableRow>
                     )}
@@ -287,32 +287,32 @@ const Admin = () => {
             
             <TabsContent value="add">
               <div className="bg-card border border-border rounded-lg p-6">
-                <h2 className="text-2xl font-semibold mb-6">Add New Vehicle</h2>
+                <h2 className="text-2xl font-semibold mb-6">Ajouter un Nouveau Véhicule</h2>
                 <AdminCarForm onSubmit={handleAddCar} isSubmitting={isSubmitting} />
               </div>
             </TabsContent>
           </Tabs>
 
-          {/* Add Vehicle Dialog */}
+          {/* Dialogue Ajouter Véhicule */}
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New Vehicle</DialogTitle>
+                <DialogTitle>Ajouter un Nouveau Véhicule</DialogTitle>
                 <DialogDescription>
-                  Enter the details of the vehicle you want to add.
+                  Entrez les détails du véhicule que vous souhaitez ajouter.
                 </DialogDescription>
               </DialogHeader>
               <AdminCarForm onSubmit={handleAddCar} isSubmitting={isSubmitting} />
             </DialogContent>
           </Dialog>
 
-          {/* Edit Vehicle Dialog */}
+          {/* Dialogue Modifier Véhicule */}
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Edit Vehicle</DialogTitle>
+                <DialogTitle>Modifier le Véhicule</DialogTitle>
                 <DialogDescription>
-                  Update the details of this vehicle.
+                  Mettez à jour les détails de ce véhicule.
                 </DialogDescription>
               </DialogHeader>
               {selectedCar && (
