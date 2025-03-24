@@ -56,7 +56,7 @@ const CarCard = ({ car, className }: CarCardProps) => {
               car.inStock ? "bg-green-500/90 hover:bg-green-500/80" : "bg-red-500/90 hover:bg-red-500/80"
             )}
           >
-            {car.inStock ? "In Stock" : "Sold Out"}
+            {car.inStock ? "En Stock" : "Vendu"}
           </Badge>
         </div>
       </div>
@@ -82,13 +82,18 @@ const CarCard = ({ car, className }: CarCardProps) => {
           </div>
           <div className="flex items-center gap-1">
             <Fuel className="h-4 w-4" />
-            <span className="capitalize">{car.fuelType}</span>
+            <span className="capitalize">
+              {car.fuelType === "petrol" && "Essence"}
+              {car.fuelType === "diesel" && "Diesel"}
+              {car.fuelType === "electric" && "Électrique"}
+              {car.fuelType === "hybrid" && "Hybride"}
+            </span>
           </div>
         </div>
 
         <Button asChild className="w-full mt-2 group">
           <Link to={`/cars/${car.id}`} className="flex items-center justify-center">
-            View Details
+            Voir les détails
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </Button>

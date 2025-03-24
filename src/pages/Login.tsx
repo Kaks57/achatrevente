@@ -44,16 +44,16 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      const user = authenticateUser(data.username, data.password);
+      const user = await authenticateUser(data.username, data.password);
       
       if (user) {
         loginUser(user);
         navigate("/admin");
       } else {
-        toast.error("Invalid username or password");
+        toast.error("Identifiants invalides");
       }
     } catch (error) {
-      toast.error("An error occurred during login");
+      toast.error("Une erreur s'est produite pendant la connexion");
       console.error(error);
     } finally {
       setIsSubmitting(false);

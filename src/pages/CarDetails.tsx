@@ -37,13 +37,21 @@ const CarDetails = () => {
     window.scrollTo(0, 0);
     
     if (id) {
-      const fetchedCar = getCarById(id);
-      if (fetchedCar) {
-        setCar(fetchedCar);
-      }
+      const fetchCar = async () => {
+        try {
+          const fetchedCar = await getCarById(id);
+          if (fetchedCar) {
+            setCar(fetchedCar);
+          }
+          setLoading(false);
+        } catch (error) {
+          console.error("Erreur lors du chargement du véhicule:", error);
+          setLoading(false);
+        }
+      };
+      
+      fetchCar();
     }
-    
-    setLoading(false);
   }, [id]);
 
   // Format price with Euro symbol

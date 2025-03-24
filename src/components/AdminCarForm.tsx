@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Validation schema
+// Schéma de validation
 const carSchema = z.object({
   make: z.string().min(1, "Marque requise"),
   model: z.string().min(1, "Modèle requis"),
@@ -54,7 +54,7 @@ const AdminCarForm: React.FC<AdminCarFormProps> = ({
   onSubmit,
   isSubmitting,
 }) => {
-  // Initialize the form with default values or existing car values
+  // Initialiser le formulaire avec les valeurs par défaut ou les valeurs existantes
   const form = useForm<CarFormValues>({
     resolver: zodResolver(carSchema),
     defaultValues: car

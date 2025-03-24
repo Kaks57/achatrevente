@@ -47,10 +47,19 @@ const Cars = () => {
     window.scrollTo(0, 0);
     
     // Fetch all cars
-    const fetchedCars = getCars();
-    setCars(fetchedCars);
-    setFilteredCars(fetchedCars);
-    setLoading(false);
+    const fetchAllCars = async () => {
+      try {
+        const fetchedCars = await getCars();
+        setCars(fetchedCars);
+        setFilteredCars(fetchedCars);
+        setLoading(false);
+      } catch (error) {
+        console.error("Erreur lors du chargement des véhicules:", error);
+        setLoading(false);
+      }
+    };
+    
+    fetchAllCars();
   }, []);
 
   // Apply filters

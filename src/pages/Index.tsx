@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Hero from "@/components/Hero";
 import Navbar from "@/components/Navbar";
@@ -8,10 +8,29 @@ import CarCard from "@/components/CarCard";
 import { Button } from "@/components/ui/button";
 import { getCars } from "@/utils/database";
 import { ChevronRight, Car, Shield, Phone } from "lucide-react";
+import { Car as CarType } from "@/utils/types";
 
 const Index = () => {
+  // État pour stocker les voitures à la une
+  const [featuredCars, setFeaturedCars] = useState<CarType[]>([]);
+  const [loading, setLoading] = useState(true);
+
   // Récupération des voitures à la une (3 dernières)
-  const featuredCars = getCars().slice(0, 3);
+  useEffect(() => {
+    const fetchCars = async () => {
+      setLoading(true);
+      try {
+        const allCars = await getCars();
+        setFeaturedCars(allCars.slice(0, 3));
+      } catch (error) {
+        console.error("Erreur lors de la récupération des voitures:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCars();
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -37,17 +56,23 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {featuredCars.map((car, index) => (
-                <div 
-                  key={car.id} 
-                  className="animate-scale-in" 
-                  style={{ animationDelay: `${index * 150}ms` }}
-                >
-                  <CarCard car={car} />
-                </div>
-              ))}
-            </div>
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                {featuredCars.map((car, index) => (
+                  <div 
+                    key={car.id} 
+                    className="animate-scale-in" 
+                    style={{ animationDelay: `${index * 150}ms` }}
+                  >
+                    <CarCard car={car} />
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="text-center animate-fade-in">
               <Button asChild size="lg" className="group">

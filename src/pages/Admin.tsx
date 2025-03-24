@@ -50,6 +50,7 @@ const Admin = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -67,10 +68,17 @@ const Admin = () => {
     }
   }, [navigate]);
 
-  const fetchCars = () => {
-    const fetchedCars = getCars();
-    setCars(fetchedCars);
-    setFilteredCars(fetchedCars);
+  const fetchCars = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedCars = await getCars();
+      setCars(fetchedCars);
+      setFilteredCars(fetchedCars);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des voitures:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Gestion de la recherche
@@ -90,11 +98,11 @@ const Admin = () => {
     }
   }, [searchTerm, cars]);
 
-  const handleAddCar = (carData: any) => {
+  const handleAddCar = async (carData: any) => {
     setIsSubmitting(true);
     try {
-      addCar(carData);
-      fetchCars();
+      await addCar(carData);
+      await fetchCars();
       setIsAddDialogOpen(false);
     } catch (error) {
       console.error("Erreur lors de l'ajout du véhicule:", error);
@@ -103,13 +111,13 @@ const Admin = () => {
     }
   };
 
-  const handleEditCar = (carData: any) => {
+  const handleEditCar = async (carData: any) => {
     if (!selectedCar) return;
     
     setIsSubmitting(true);
     try {
-      updateCar(selectedCar.id, carData);
-      fetchCars();
+      await updateCar(selectedCar.id, carData);
+      await fetchCars();
       setIsEditDialogOpen(false);
       setSelectedCar(null);
     } catch (error) {
@@ -119,10 +127,10 @@ const Admin = () => {
     }
   };
 
-  const handleDeleteCar = (id: string) => {
+  const handleDeleteCar = async (id: string) => {
     try {
-      deleteCar(id);
-      fetchCars();
+      await deleteCar(id);
+      await fetchCars();
     } catch (error) {
       console.error("Erreur lors de la suppression du véhicule:", error);
     }
@@ -210,7 +218,15 @@ const Admin = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCars.length > 0 ? (
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8">
+                          <div className="flex justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredCars.length > 0 ? (
                       filteredCars.map((car) => (
                         <TableRow key={car.id}>
                           <TableCell className="font-medium">

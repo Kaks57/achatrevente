@@ -18,10 +18,10 @@ const Contact = () => {
         <div className="container mx-auto px-4 py-8">
           {/* Page header */}
           <div className="text-center mb-16 animate-fade-in">
-            <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
+            <h1 className="text-4xl font-bold mb-4">Contactez-nous</h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Have questions about our vehicles or services? Our team is here to help.
-              Reach out to us through any of the channels below.
+              Vous avez des questions sur nos véhicules ou services ? Notre équipe est là pour vous aider.
+              Contactez-nous par l'un des canaux ci-dessous.
             </p>
           </div>
 
@@ -29,7 +29,7 @@ const Contact = () => {
             {/* Contact form */}
             <div className="animate-slide-in-left">
               <div className="bg-card shadow-sm border border-border rounded-xl p-8">
-                <h2 className="text-2xl font-semibold mb-6">Send Us a Message</h2>
+                <h2 className="text-2xl font-semibold mb-6">Envoyez-nous un message</h2>
                 <ContactForm />
               </div>
             </div>
@@ -37,7 +37,7 @@ const Contact = () => {
             {/* Contact information */}
             <div className="space-y-8 animate-slide-in-right">
               <div className="bg-primary/5 rounded-xl p-8 border border-primary/10">
-                <h2 className="text-2xl font-semibold mb-6">Contact Information</h2>
+                <h2 className="text-2xl font-semibold mb-6">Informations de contact</h2>
                 
                 <div className="space-y-6">
                   {/* Phone */}
@@ -46,7 +46,7 @@ const Contact = () => {
                       <Phone className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-medium mb-1">Phone</h3>
+                      <h3 className="font-medium mb-1">Téléphone</h3>
                       <p className="text-muted-foreground">+33 1 23 45 67 89</p>
                     </div>
                   </div>
@@ -58,7 +58,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h3 className="font-medium mb-1">Email</h3>
-                      <p className="text-muted-foreground">contact@autoelite.com</p>
+                      <p className="text-muted-foreground">contact@luxuryrentalworld.com</p>
                     </div>
                   </div>
                   
@@ -68,10 +68,10 @@ const Contact = () => {
                       <MapPin className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-medium mb-1">Address</h3>
+                      <h3 className="font-medium mb-1">Adresse</h3>
                       <p className="text-muted-foreground">
-                        123 Luxury Lane<br />
-                        Automotive District<br />
+                        123 Avenue du Luxe<br />
+                        Quartier Automobile<br />
                         Paris 75000<br />
                         France
                       </p>
@@ -84,11 +84,11 @@ const Contact = () => {
                       <Clock className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-medium mb-1">Business Hours</h3>
+                      <h3 className="font-medium mb-1">Heures d'ouverture</h3>
                       <p className="text-muted-foreground">
-                        Monday - Friday: 9:00 AM - 7:00 PM<br />
-                        Saturday: 10:00 AM - 6:00 PM<br />
-                        Sunday: Closed
+                        Lundi - Vendredi: 9h00 - 19h00<br />
+                        Samedi: 10h00 - 18h00<br />
+                        Dimanche: Fermé
                       </p>
                     </div>
                   </div>
@@ -99,7 +99,7 @@ const Contact = () => {
 
           {/* Map */}
           <div className="mb-16 animate-fade-in">
-            <h2 className="text-2xl font-semibold mb-6 text-center">Find Us</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-center">Nous trouver</h2>
             <div className="bg-muted rounded-xl overflow-hidden h-[400px] shadow-sm border border-border">
               <iframe 
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d83998.95410647462!2d2.2646350475979855!3d48.85893676725246!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47e66e1f06e2b70f%3A0x40b82c3688c9460!2sParis%2C%20France!5e0!3m2!1sen!2sus!4v1652956823962!5m2!1sen!2sus" 
@@ -109,7 +109,7 @@ const Contact = () => {
                 allowFullScreen 
                 loading="lazy" 
                 referrerPolicy="no-referrer-when-downgrade"
-                title="AutoElite location"
+                title="LuxuryRentalWorld emplacement"
               ></iframe>
             </div>
           </div>
