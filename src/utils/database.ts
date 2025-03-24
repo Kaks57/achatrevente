@@ -1,4 +1,3 @@
-
 import { Car, User } from "./types";
 import { toast } from "sonner";
 
@@ -7,6 +6,9 @@ const DB_NAME = "luxuryRentalWorldDB";
 const DB_VERSION = 1;
 const CARS_STORE = "cars";
 const USERS_STORE = "users";
+
+// Ajouter une constante pour le délai d'attente des opérations
+const DB_TIMEOUT = 10000; // 10 secondes
 
 // Initialiser la base de données IndexedDB
 const initializeDatabase = (): Promise<void> => {
@@ -36,6 +38,7 @@ const initializeDatabase = (): Promise<void> => {
       if (!db.objectStoreNames.contains(CARS_STORE)) {
         const carsStore = db.createObjectStore(CARS_STORE, { keyPath: "id" });
         carsStore.createIndex("createdAt", "createdAt", { unique: false });
+        carsStore.createIndex("updatedAt", "updatedAt", { unique: false });
       }
       
       // Créer le magasin de données pour les utilisateurs
@@ -75,6 +78,7 @@ const initializeDatabase = (): Promise<void> => {
               ],
               inStock: true,
               createdAt: Date.now(),
+              updatedAt: Date.now(),
             },
             {
               id: "2",
@@ -94,6 +98,7 @@ const initializeDatabase = (): Promise<void> => {
               ],
               inStock: true,
               createdAt: Date.now() - 86400000, // 1 jour avant
+              updatedAt: Date.now() - 86400000,
             },
             {
               id: "3",
@@ -113,6 +118,7 @@ const initializeDatabase = (): Promise<void> => {
               ],
               inStock: true,
               createdAt: Date.now() - 172800000, // 2 jours avant
+              updatedAt: Date.now() - 172800000,
             },
           ];
           
@@ -177,6 +183,7 @@ const initializeLocalStorage = () => {
         ],
         inStock: true,
         createdAt: Date.now(),
+        updatedAt: Date.now(),
       },
       {
         id: "2",
@@ -196,6 +203,7 @@ const initializeLocalStorage = () => {
         ],
         inStock: true,
         createdAt: Date.now() - 86400000, // 1 jour avant
+        updatedAt: Date.now() - 86400000,
       },
       {
         id: "3",
@@ -215,6 +223,7 @@ const initializeLocalStorage = () => {
         ],
         inStock: true,
         createdAt: Date.now() - 172800000, // 2 jours avant
+        updatedAt: Date.now() - 172800000,
       },
     ];
     localStorage.setItem("cars", JSON.stringify(demoCars));
@@ -233,46 +242,85 @@ const initializeLocalStorage = () => {
   }
 };
 
-// Obtenir toutes les voitures
+// Fonction pour vérifier si localStorage a été modifié
+const checkLocalStorageUpdates = (currentCars: Car[]): Car[] => {
+  const storedCars = localStorage.getItem("cars");
+  if (storedCars) {
+    const parsedCars = JSON.parse(storedCars) as Car[];
+    
+    // Vérifier si les données sont différentes de celles actuellement en mémoire
+    if (JSON.stringify(parsedCars) !== JSON.stringify(currentCars)) {
+      return parsedCars;
+    }
+  }
+  return currentCars;
+};
+
+// Obtenir toutes les voitures avec rafraîchissement forcé
 export const getCars = async (): Promise<Car[]> => {
   await initializeDatabase();
   
   return new Promise((resolve, reject) => {
+    let timeoutId: number;
+
+    // Créer un timeout pour éviter les blocages
+    const timeout = new Promise<Car[]>((_, reject) => {
+      timeoutId = window.setTimeout(() => {
+        // Fallback à localStorage en cas de timeout
+        const cars = localStorage.getItem("cars");
+        const parsedCars = cars ? JSON.parse(cars) as Car[] : [];
+        console.warn("Timeout lors de la récupération des véhicules, utilisation du cache local");
+        resolve(parsedCars.sort((a, b) => b.updatedAt - a.updatedAt || b.createdAt - a.createdAt));
+      }, DB_TIMEOUT);
+    });
+
     // Essayer d'abord avec IndexedDB
-    if (window.indexedDB) {
+    const fetchFromDB = new Promise<Car[]>((resolve, reject) => {
+      if (!window.indexedDB) {
+        // Fallback à localStorage
+        const cars = localStorage.getItem("cars");
+        resolve(cars ? JSON.parse(cars) as Car[] : []);
+        return;
+      }
+      
       const request = window.indexedDB.open(DB_NAME, DB_VERSION);
       
       request.onerror = () => {
         // Fallback à localStorage
         const cars = localStorage.getItem("cars");
-        resolve(cars ? JSON.parse(cars) : []);
+        resolve(cars ? JSON.parse(cars) as Car[] : []);
       };
       
       request.onsuccess = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
         const transaction = db.transaction(CARS_STORE, "readonly");
         const store = transaction.objectStore(CARS_STORE);
-        const index = store.index("createdAt");
+        const index = store.index("updatedAt");
         
         const request = index.getAll();
         
         request.onsuccess = () => {
-          // Trier les voitures par date de création (les plus récentes d'abord)
-          const cars = request.result.sort((a, b) => b.createdAt - a.createdAt);
+          // Annuler le timeout puisque l'opération a réussi
+          clearTimeout(timeoutId);
+          
+          // Trier les voitures par date de mise à jour (les plus récentes d'abord)
+          const cars = request.result.sort((a, b) => b.updatedAt - a.updatedAt || b.createdAt - a.createdAt);
+          
+          // Mettre à jour localStorage pour les appareils qui l'utilisent
+          localStorage.setItem("cars", JSON.stringify(cars));
           resolve(cars);
         };
         
         request.onerror = () => {
           // Fallback à localStorage
           const cars = localStorage.getItem("cars");
-          resolve(cars ? JSON.parse(cars) : []);
+          resolve(cars ? JSON.parse(cars) as Car[] : []);
         };
       };
-    } else {
-      // Fallback à localStorage
-      const cars = localStorage.getItem("cars");
-      resolve(cars ? JSON.parse(cars) : []);
-    }
+    });
+
+    // Utiliser la première réponse (IndexedDB ou timeout)
+    Promise.race([fetchFromDB, timeout]).then(resolve).catch(reject);
   });
 };
 
@@ -283,11 +331,13 @@ export const getCarById = async (id: string): Promise<Car | undefined> => {
 };
 
 // Ajouter une nouvelle voiture (admin uniquement)
-export const addCar = async (car: Omit<Car, "id" | "createdAt">): Promise<Car> => {
+export const addCar = async (car: Omit<Car, "id" | "createdAt" | "updatedAt">): Promise<Car> => {
+  const timestamp = Date.now();
   const newCar: Car = {
     ...car,
-    id: Date.now().toString(),
-    createdAt: Date.now(),
+    id: timestamp.toString(),
+    createdAt: timestamp,
+    updatedAt: timestamp,
   };
   
   return new Promise((resolve, reject) => {
@@ -298,7 +348,7 @@ export const addCar = async (car: Omit<Car, "id" | "createdAt">): Promise<Car> =
       request.onerror = () => {
         // Fallback à localStorage
         const cars = localStorage.getItem("cars");
-        const existingCars = cars ? JSON.parse(cars) : [];
+        const existingCars = cars ? JSON.parse(cars) as Car[] : [];
         localStorage.setItem("cars", JSON.stringify([...existingCars, newCar]));
         toast.success("Véhicule ajouté avec succès");
         resolve(newCar);
@@ -312,6 +362,11 @@ export const addCar = async (car: Omit<Car, "id" | "createdAt">): Promise<Car> =
         const addRequest = store.add(newCar);
         
         addRequest.onsuccess = () => {
+          // Mettre également à jour localStorage pour la synchronisation
+          getCars().then(updatedCars => {
+            localStorage.setItem("cars", JSON.stringify(updatedCars));
+          });
+          
           toast.success("Véhicule ajouté avec succès");
           resolve(newCar);
         };
@@ -319,7 +374,7 @@ export const addCar = async (car: Omit<Car, "id" | "createdAt">): Promise<Car> =
         addRequest.onerror = () => {
           // Fallback à localStorage
           const cars = localStorage.getItem("cars");
-          const existingCars = cars ? JSON.parse(cars) : [];
+          const existingCars = cars ? JSON.parse(cars) as Car[] : [];
           localStorage.setItem("cars", JSON.stringify([...existingCars, newCar]));
           toast.success("Véhicule ajouté avec succès");
           resolve(newCar);
@@ -328,7 +383,7 @@ export const addCar = async (car: Omit<Car, "id" | "createdAt">): Promise<Car> =
     } else {
       // Fallback à localStorage
       const cars = localStorage.getItem("cars");
-      const existingCars = cars ? JSON.parse(cars) : [];
+      const existingCars = cars ? JSON.parse(cars) as Car[] : [];
       localStorage.setItem("cars", JSON.stringify([...existingCars, newCar]));
       toast.success("Véhicule ajouté avec succès");
       resolve(newCar);
@@ -337,7 +392,7 @@ export const addCar = async (car: Omit<Car, "id" | "createdAt">): Promise<Car> =
 };
 
 // Mettre à jour une voiture (admin uniquement)
-export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" | "createdAt">>): Promise<Car | undefined> => {
+export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" | "createdAt" | "updatedAt">>): Promise<Car | undefined> => {
   return new Promise(async (resolve, reject) => {
     // Essayer d'abord avec IndexedDB
     if (window.indexedDB) {
@@ -346,7 +401,7 @@ export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" |
       request.onerror = async () => {
         // Fallback à localStorage
         const cars = localStorage.getItem("cars");
-        const existingCars = cars ? JSON.parse(cars) : [];
+        const existingCars = cars ? JSON.parse(cars) as Car[] : [];
         const index = existingCars.findIndex((car: Car) => car.id === id);
         
         if (index === -1) {
@@ -356,7 +411,11 @@ export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" |
         }
         
         const updatedCars = [...existingCars];
-        updatedCars[index] = { ...updatedCars[index], ...updatedCar };
+        updatedCars[index] = { 
+          ...updatedCars[index], 
+          ...updatedCar, 
+          updatedAt: Date.now()
+        };
         localStorage.setItem("cars", JSON.stringify(updatedCars));
         toast.success("Véhicule mis à jour avec succès");
         resolve(updatedCars[index]);
@@ -378,10 +437,19 @@ export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" |
           }
           
           // Mettre à jour la voiture
-          const updatedCarObject = { ...getRequest.result, ...updatedCar };
+          const updatedCarObject = { 
+            ...getRequest.result, 
+            ...updatedCar,
+            updatedAt: Date.now()
+          };
           const updateRequest = store.put(updatedCarObject);
           
           updateRequest.onsuccess = () => {
+            // Mettre également à jour localStorage pour la synchronisation
+            getCars().then(updatedCars => {
+              localStorage.setItem("cars", JSON.stringify(updatedCars));
+            });
+            
             toast.success("Véhicule mis à jour avec succès");
             resolve(updatedCarObject);
           };
@@ -389,7 +457,7 @@ export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" |
           updateRequest.onerror = async () => {
             // Fallback à localStorage
             const cars = localStorage.getItem("cars");
-            const existingCars = cars ? JSON.parse(cars) : [];
+            const existingCars = cars ? JSON.parse(cars) as Car[] : [];
             const index = existingCars.findIndex((car: Car) => car.id === id);
             
             if (index === -1) {
@@ -399,7 +467,11 @@ export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" |
             }
             
             const updatedCars = [...existingCars];
-            updatedCars[index] = { ...updatedCars[index], ...updatedCar };
+            updatedCars[index] = { 
+              ...updatedCars[index], 
+              ...updatedCar,
+              updatedAt: Date.now()
+            };
             localStorage.setItem("cars", JSON.stringify(updatedCars));
             toast.success("Véhicule mis à jour avec succès");
             resolve(updatedCars[index]);
@@ -409,7 +481,7 @@ export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" |
         getRequest.onerror = async () => {
           // Fallback à localStorage
           const cars = localStorage.getItem("cars");
-          const existingCars = cars ? JSON.parse(cars) : [];
+          const existingCars = cars ? JSON.parse(cars) as Car[] : [];
           const index = existingCars.findIndex((car: Car) => car.id === id);
           
           if (index === -1) {
@@ -419,7 +491,11 @@ export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" |
           }
           
           const updatedCars = [...existingCars];
-          updatedCars[index] = { ...updatedCars[index], ...updatedCar };
+          updatedCars[index] = { 
+            ...updatedCars[index], 
+            ...updatedCar,
+            updatedAt: Date.now()
+          };
           localStorage.setItem("cars", JSON.stringify(updatedCars));
           toast.success("Véhicule mis à jour avec succès");
           resolve(updatedCars[index]);
@@ -428,7 +504,7 @@ export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" |
     } else {
       // Fallback à localStorage
       const cars = localStorage.getItem("cars");
-      const existingCars = cars ? JSON.parse(cars) : [];
+      const existingCars = cars ? JSON.parse(cars) as Car[] : [];
       const index = existingCars.findIndex((car: Car) => car.id === id);
       
       if (index === -1) {
@@ -438,7 +514,11 @@ export const updateCar = async (id: string, updatedCar: Partial<Omit<Car, "id" |
       }
       
       const updatedCars = [...existingCars];
-      updatedCars[index] = { ...updatedCars[index], ...updatedCar };
+      updatedCars[index] = { 
+        ...updatedCars[index], 
+        ...updatedCar,
+        updatedAt: Date.now()
+      };
       localStorage.setItem("cars", JSON.stringify(updatedCars));
       toast.success("Véhicule mis à jour avec succès");
       resolve(updatedCars[index]);
@@ -456,7 +536,7 @@ export const deleteCar = async (id: string): Promise<boolean> => {
       request.onerror = async () => {
         // Fallback à localStorage
         const cars = localStorage.getItem("cars");
-        const existingCars = cars ? JSON.parse(cars) : [];
+        const existingCars = cars ? JSON.parse(cars) as Car[] : [];
         const filteredCars = existingCars.filter((car: Car) => car.id !== id);
         
         if (filteredCars.length === existingCars.length) {
@@ -489,6 +569,11 @@ export const deleteCar = async (id: string): Promise<boolean> => {
           const deleteRequest = store.delete(id);
           
           deleteRequest.onsuccess = () => {
+            // Mettre également à jour localStorage pour la synchronisation
+            getCars().then(updatedCars => {
+              localStorage.setItem("cars", JSON.stringify(updatedCars));
+            });
+            
             toast.success("Véhicule supprimé avec succès");
             resolve(true);
           };
@@ -496,7 +581,7 @@ export const deleteCar = async (id: string): Promise<boolean> => {
           deleteRequest.onerror = async () => {
             // Fallback à localStorage
             const cars = localStorage.getItem("cars");
-            const existingCars = cars ? JSON.parse(cars) : [];
+            const existingCars = cars ? JSON.parse(cars) as Car[] : [];
             const filteredCars = existingCars.filter((car: Car) => car.id !== id);
             
             if (filteredCars.length === existingCars.length) {
@@ -514,7 +599,7 @@ export const deleteCar = async (id: string): Promise<boolean> => {
         getRequest.onerror = async () => {
           // Fallback à localStorage
           const cars = localStorage.getItem("cars");
-          const existingCars = cars ? JSON.parse(cars) : [];
+          const existingCars = cars ? JSON.parse(cars) as Car[] : [];
           const filteredCars = existingCars.filter((car: Car) => car.id !== id);
           
           if (filteredCars.length === existingCars.length) {
@@ -531,7 +616,7 @@ export const deleteCar = async (id: string): Promise<boolean> => {
     } else {
       // Fallback à localStorage
       const cars = localStorage.getItem("cars");
-      const existingCars = cars ? JSON.parse(cars) : [];
+      const existingCars = cars ? JSON.parse(cars) as Car[] : [];
       const filteredCars = existingCars.filter((car: Car) => car.id !== id);
       
       if (filteredCars.length === existingCars.length) {

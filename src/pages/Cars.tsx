@@ -60,6 +60,14 @@ const Cars = () => {
     };
     
     fetchAllCars();
+    
+    // Configurer un interval pour actualiser les données toutes les 30 secondes
+    const refreshInterval = setInterval(() => {
+      fetchAllCars();
+    }, 30000);
+    
+    // Nettoyer l'interval lors du démontage du composant
+    return () => clearInterval(refreshInterval);
   }, []);
 
   // Apply filters

@@ -51,6 +51,21 @@ const CarDetails = () => {
       };
       
       fetchCar();
+      
+      // Configurer un interval pour actualiser les données toutes les 30 secondes
+      const refreshInterval = setInterval(async () => {
+        try {
+          const refreshedCar = await getCarById(id);
+          if (refreshedCar && JSON.stringify(refreshedCar) !== JSON.stringify(car)) {
+            setCar(refreshedCar);
+          }
+        } catch (error) {
+          console.error("Erreur lors de l'actualisation des données:", error);
+        }
+      }, 30000);
+      
+      // Nettoyer l'interval lors du démontage du composant
+      return () => clearInterval(refreshInterval);
     }
   }, [id]);
 

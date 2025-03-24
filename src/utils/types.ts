@@ -14,6 +14,7 @@ export interface Car {
   images: string[];
   inStock: boolean;
   createdAt: number;
+  updatedAt: number;
 }
 
 export type User = {

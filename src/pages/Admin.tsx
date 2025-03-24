@@ -81,6 +81,16 @@ const Admin = () => {
     }
   };
 
+  // Configurer un interval pour actualiser les données toutes les 20 secondes
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      fetchCars();
+    }, 20000);
+    
+    // Nettoyer l'interval lors du démontage du composant
+    return () => clearInterval(refreshInterval);
+  }, []);
+
   // Gestion de la recherche
   useEffect(() => {
     if (searchTerm.trim() === "") {
