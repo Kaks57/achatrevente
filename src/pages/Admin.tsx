@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCars, addCar, updateCar, deleteCar } from "@/utils/database";
@@ -39,6 +38,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Search, Edit, Trash2, LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -76,16 +76,17 @@ const Admin = () => {
       setFilteredCars(fetchedCars);
     } catch (error) {
       console.error("Erreur lors de la récupération des voitures:", error);
+      toast.error("Impossible de charger les véhicules");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Configurer un interval pour actualiser les données toutes les 20 secondes
+  // Configurer un interval pour actualiser les données toutes les 10 secondes
   useEffect(() => {
     const refreshInterval = setInterval(() => {
       fetchCars();
-    }, 20000);
+    }, 10000);
     
     // Nettoyer l'interval lors du démontage du composant
     return () => clearInterval(refreshInterval);
@@ -114,8 +115,10 @@ const Admin = () => {
       await addCar(carData);
       await fetchCars();
       setIsAddDialogOpen(false);
+      toast.success("Véhicule ajouté avec succès");
     } catch (error) {
       console.error("Erreur lors de l'ajout du véhicule:", error);
+      toast.error("Erreur lors de l'ajout du véhicule");
     } finally {
       setIsSubmitting(false);
     }
@@ -130,8 +133,10 @@ const Admin = () => {
       await fetchCars();
       setIsEditDialogOpen(false);
       setSelectedCar(null);
+      toast.success("Véhicule mis à jour avec succès");
     } catch (error) {
       console.error("Erreur lors de la mise à jour du véhicule:", error);
+      toast.error("Erreur lors de la mise à jour du véhicule");
     } finally {
       setIsSubmitting(false);
     }
@@ -141,8 +146,10 @@ const Admin = () => {
     try {
       await deleteCar(id);
       await fetchCars();
+      toast.success("Véhicule supprimé avec succès");
     } catch (error) {
       console.error("Erreur lors de la suppression du véhicule:", error);
+      toast.error("Erreur lors de la suppression du véhicule");
     }
   };
 

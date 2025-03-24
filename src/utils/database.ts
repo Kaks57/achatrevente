@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 // Nom de la base de données IndexedDB
 const DB_NAME = "luxuryRentalWorldDB";
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Increment version to force schema update
 const CARS_STORE = "cars";
 const USERS_STORE = "users";
 
@@ -36,6 +36,13 @@ const initializeDatabase = (): Promise<void> => {
       
       // Créer le magasin de données pour les voitures
       if (!db.objectStoreNames.contains(CARS_STORE)) {
+        const carsStore = db.createObjectStore(CARS_STORE, { keyPath: "id" });
+        carsStore.createIndex("createdAt", "createdAt", { unique: false });
+        carsStore.createIndex("updatedAt", "updatedAt", { unique: false });
+      } else {
+        // Si le magasin existe déjà, nous devons le supprimer et le recréer
+        // pour s'assurer que les index sont correctement définis
+        db.deleteObjectStore(CARS_STORE);
         const carsStore = db.createObjectStore(CARS_STORE, { keyPath: "id" });
         carsStore.createIndex("createdAt", "createdAt", { unique: false });
         carsStore.createIndex("updatedAt", "updatedAt", { unique: false });
@@ -295,9 +302,9 @@ export const getCars = async (): Promise<Car[]> => {
         const db = (event.target as IDBOpenDBRequest).result;
         const transaction = db.transaction(CARS_STORE, "readonly");
         const store = transaction.objectStore(CARS_STORE);
-        const index = store.index("updatedAt");
         
-        const request = index.getAll();
+        // Modification ici: utiliser getAll() directement sans l'index
+        const request = store.getAll();
         
         request.onsuccess = () => {
           // Annuler le timeout puisque l'opération a réussi

@@ -49,6 +49,7 @@ const Cars = () => {
     // Fetch all cars
     const fetchAllCars = async () => {
       try {
+        setLoading(true);
         const fetchedCars = await getCars();
         setCars(fetchedCars);
         setFilteredCars(fetchedCars);
@@ -61,10 +62,10 @@ const Cars = () => {
     
     fetchAllCars();
     
-    // Configurer un interval pour actualiser les données toutes les 30 secondes
+    // Configurer un interval pour actualiser les données toutes les 10 secondes
     const refreshInterval = setInterval(() => {
       fetchAllCars();
-    }, 30000);
+    }, 10000);
     
     // Nettoyer l'interval lors du démontage du composant
     return () => clearInterval(refreshInterval);
